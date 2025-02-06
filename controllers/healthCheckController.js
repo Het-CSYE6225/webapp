@@ -12,7 +12,7 @@ exports.performHealthCheck = async (req, res) => {
     });
     res.status(200).send();
   } catch (error) {
-    console.error("Health check failed. Database may be down:", error);
+   // console.error("Health check failed. Database may be down");
     res.set({
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
@@ -32,7 +32,7 @@ exports.handleUnsupportedMethods = async (req, res) => {
     });
     res.status(405).send();
   } catch (error) {
-    console.error("Database may be down:", error);
+    console.error("Database may be down");
     res.set({
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
