@@ -7,6 +7,14 @@ const port = process.env.PORT || 8080;
 
 app.disable('x-powered-by');
 app.use(express.json());
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).send('Invalid JSON payload.');
+    }
+    next();
+});
+
+// Middleware to check for GET requests with a body
 app.use((req, res, next) => {
     if (req.method === 'GET' && Object.keys(req.body).length > 0) {
         return res.status(400).send('GET requests should not have a body.');
@@ -14,6 +22,12 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use((req, res, next) => {
+    if (req.method === 'GET' && Object.keys(req.query).length > 0) {
+        return res.status(400).send('GET requests should not have query parameters.');
+    }
+    next();
+});
 
 connectWithDatabaseCreation().then(() => {
     app.use('/', healthCheckRoutes);
@@ -28,3 +42,5 @@ connectWithDatabaseCreation().then(() => {
 }).catch(err => {
     console.error('Failed to initialize the database:', err);
 });
+
+module.exports = app;
