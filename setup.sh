@@ -71,5 +71,5 @@ else
     npm install
 fi
 
-# Create environment variables file (.env)
+# Create environment variables file 
 echo -e "DB_NAME=cloud_app\nDB_USER=postgres\nDB_PASSWORD=Tejal123\nDB_HOST=10.116.0.3\nPORT=8080" | sudo tee .env > /dev/nul
