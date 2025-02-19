@@ -59,4 +59,4 @@ jobs:
           NODE_ENV: test
           PORT: 8080
           CI: true
-        run: npm test 
+        run: npm test -- --forceExit

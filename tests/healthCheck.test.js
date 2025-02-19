@@ -1,43 +1,43 @@
 const request = require('supertest');
-const app = require('../app'); // Import the Express app
-const { sequelize } = require('../db/config'); // Import Sequelize instance
-let server; // For tracking the server instance if needed
-
-// Helper function to close the server and Sequelize connection gracefully
-const closeResources = async () => {
-  if (server && server.close) {
-    await new Promise((resolve, reject) => {
-      server.close((err) => (err ? reject(err) : resolve()));
-    });
-  }
-  await sequelize.close();
-};
+const app = require('../app'); 
+const { sequelize } = require('../db/config'); 
+const { setImmediate } = require('timers'); 
+const { globalAgent } = require('http'); 
+let server; 
 
 describe('Health Check Routes', () => {
   beforeAll(async () => {
     try {
-      await sequelize.authenticate(); // Ensure database connection
-      server = app.listen(0); // Start the app on a random available port for testing
+      await sequelize.authenticate(); 
+      server = app.listen(0); 
     } catch (error) {
       console.error('Database is down, tests may fail', error);
     }
   });
 
   afterAll(async () => {
-    if (server && server.close) {
+    console.log('Closing all resources...');
+
+    if (server) {
       await new Promise((resolve, reject) => {
         server.close((err) => (err ? reject(err) : resolve()));
       });
     }
-    await sequelize.close(); // Ensure the database connection is closed
+
+    if (sequelize) {
+      await sequelize.close();
+    }
+
+    // Close open HTTP connections
+    globalAgent.destroy();
+
+    // Allow all microtasks to finish before Jest exits
+    await new Promise((resolve) => setImmediate(resolve));
   });
-  
 
   afterEach(async () => {
-    jest.restoreAllMocks(); // Restore mocked functions after each test
-
-    // Flush any pending microtasks to prevent open handle warnings
-    await new Promise((resolve) => setImmediate(resolve));
+    jest.restoreAllMocks(); 
+    await new Promise((resolve) => setImmediate(resolve)); 
   });
 
   test('GET /healthz should return 200 OK when the database is up', async () => {
@@ -66,11 +66,9 @@ describe('Health Check Routes', () => {
   });
 
   test('Database down should return 503 Service Unavailable', async () => {
-    const mock = jest.spyOn(sequelize, 'authenticate').mockRejectedValue(new Error('Database is down'));
+    jest.spyOn(sequelize, 'authenticate').mockRejectedValue(new Error('Database is down'));
 
     const response = await request(server).get('/healthz');
     expect(response.status).toBe(503);
-
-    mock.mockRestore(); // Restore after the test
   });
 });
