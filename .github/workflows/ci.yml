@@ -57,4 +57,4 @@ jobs:
           DB_PASS: ${{ secrets.DB_PASS }}
           DB_HOST: localhost
           PORT: 8080
-        run: npm test 
+        run: npm test -- --detectOpenHandles
