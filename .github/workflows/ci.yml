@@ -1,62 +1,53 @@
-# Workflow name that appears in the GitHub Actions UI
 name: CI - Run Application Tests
 
-# Trigger this workflow on pull requests targeting the 'main' branch
 on:
   pull_request:
     branches:
-      - main  # Change if your default branch has a different name
+      - main  
 
 jobs:
   test:
-    # Run the job on the latest Ubuntu environment
     runs-on: ubuntu-latest
 
-    # Define services needed for the job; here, a PostgreSQL database
     services:
       postgres:
-        image: postgres:16  # Use PostgreSQL version 16
+        image: postgres:16
         env:
-          POSTGRES_DB: ${{ secrets.DB_NAME }}       # Database name from GitHub secrets
-          POSTGRES_USER: ${{ secrets.DB_USER }}     # Database user from GitHub secrets
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASS }} # Database password from GitHub secrets
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASS }}
         ports:
-          - 5432:5432  # Map container port 5432 to host port 5432
-        options: >-     # PostgreSQL health check to ensure service readiness
+          - 5432:5432
+        options: >-
           --health-cmd pg_isready
-          --health-interval 10s  # Check every 10 seconds
-          --health-timeout 5s    # Timeout after 5 seconds if not ready
-          --health-retries 5     # Retry health check 5 times before failing
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      # Step 1: Checkout the code from the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Specify the Node.js version used in the project
+          node-version: '18'  # Change to match your Node.js version
 
-      # Step 3: Install project dependencies using npm
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Wait until PostgreSQL is fully ready before running tests
       - name: Wait for PostgreSQL to be ready
         run: |
           until pg_isready -h localhost -p 5432; do
-            echo "Waiting for PostgreSQL..."  # Log while waiting for DB readiness
-            sleep 5                           # Wait 5 seconds before rechecking
+            echo "Waiting for PostgreSQL..."
+            sleep 5
           done
 
-      # Step 5: Run the test suite with necessary environment variables
       - name: Run tests
         env:
-          DB_NAME: ${{ secrets.DB_NAME }}   
-          DB_USER: ${{ secrets.DB_USER }}   
-          DB_PASS: ${{ secrets.DB_PASS }}   
-          DB_HOST: localhost                
-          PORT: 8080                        
-        run: npm test                       
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_HOST: localhost
+          PORT: 8080
+        run: npm test
