@@ -59,6 +59,10 @@ This should return HTTP 200 OK if the server and database are running properly, 
 
 ```bash
 curl -vvvv -XPUT http://localhost:8080/healthz
+curl -vvvv -XPOST http://localhost:8080/healthz
+curl -vvvv -XPATCH http://localhost:8080/healthz
+curl -vvvv -XDELETE http://localhost:8080/healthz
+
 ```
 
 This should return HTTP 405 Method Not Allowed
