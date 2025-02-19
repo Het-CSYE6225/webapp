@@ -56,3 +56,16 @@ sudo unzip "/root/webapp.zip" -d /opt/csye6225
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt install nodejs -y
 
+sudo chown -R clouduser:cloudgroup /opt/csye6225
+sudo chmod -R 755 /opt/csye6225
+
+cd /opt/csye6225/webapp || { echo "Directory /opt/csye6225/webapp not found. Exiting."; exit 1; }
+
+if [ -f package.json ]; then
+    echo "package.json found; skipping 'npm install'."
+else
+    echo "package.json not found; running 'npm install'."
+    npm install
+fi
+
+echo -e "DB_NAME=cloud_app\nDB_USER=postgres\nDB_PASS=Tejal123\nDB_HOST=10.116.0.3\nPORT=8080" | sudo tee .env > /dev/null
