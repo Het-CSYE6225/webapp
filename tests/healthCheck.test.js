@@ -24,8 +24,14 @@ describe('Health Check Routes', () => {
   });
 
   afterAll(async () => {
-    await closeResources();
+    if (server && server.close) {
+      await new Promise((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
+    await sequelize.close(); // Ensure the database connection is closed
   });
+  
 
   afterEach(async () => {
     jest.restoreAllMocks(); // Restore mocked functions after each test
