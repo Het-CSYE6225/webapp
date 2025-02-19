@@ -56,11 +56,14 @@ sudo unzip "/root/webapp.zip" -d /opt/csye6225
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt install nodejs -y
 
+# Set ownership and permissions
 sudo chown -R clouduser:cloudgroup /opt/csye6225
 sudo chmod -R 755 /opt/csye6225
 
+# Change directory to the app folder
 cd /opt/csye6225/webapp || { echo "Directory /opt/csye6225/webapp not found. Exiting."; exit 1; }
 
+# Check if package.json exists.
 if [ -f package.json ]; then
     echo "package.json found; skipping 'npm install'."
 else
@@ -68,4 +71,5 @@ else
     npm install
 fi
 
-echo -e "DB_NAME=cloud_app\nDB_USER=postgres\nDB_PASS=Tejal123\nDB_HOST=10.116.0.3\nPORT=8080" | sudo tee .env > /dev/null
+# Create environment variables file (.env)
+echo -e "DB_NAME=cloud_app\nDB_USER=postgres\nDB_PASSWORD=Tejal123\nDB_HOST=10.116.0.3\nPORT=8080" | sudo tee .env > /dev/nul
