@@ -3,15 +3,14 @@ name: CI - Run Application Tests
 on:
   pull_request:
     branches:
-      - main  # Change to your default branch if it's different
+      - main
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     services:
       postgres:
-        image: postgres:16
+        image: postgres:alpine  # Use a faster image
         env:
           POSTGRES_DB: ${{ secrets.DB_NAME }}
           POSTGRES_USER: ${{ secrets.DB_USER }}
@@ -19,19 +18,27 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "pg_isready -U $POSTGRES_USER"
+          --health-interval 5s
+          --health-timeout 2s
+          --health-retries 3
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Change to match your Node.js version
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
@@ -40,7 +47,7 @@ jobs:
         run: |
           until pg_isready -h localhost -p 5432; do
             echo "Waiting for PostgreSQL..."
-            sleep 5
+            sleep 2
           done
 
       - name: Run tests
@@ -50,4 +57,4 @@ jobs:
           DB_PASS: ${{ secrets.DB_PASS }}
           DB_HOST: localhost
           PORT: 8080
-        run: npm test
+        run: npm test -- --forceExit
