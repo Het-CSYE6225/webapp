@@ -57,6 +57,11 @@ curl -vvvv http://localhost:8080/healthz
 
 This should return HTTP 200 OK if the server and database are running properly, and HTTP 503 Service Unavailable if there is an issue.
 
+```bash
+curl -vvvv -XPUT http://localhost:8080/healthz
+```
+
+This should return HTTP 405 Method Not Allowed
 
 ## Contribution Guidelines
 
