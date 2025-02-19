@@ -1,18 +1,29 @@
 const request = require('supertest');
 const app = require('../app'); // Import the Express app
 const { sequelize } = require('../db/config'); // Import Sequelize instance
+let server; // For tracking the server instance if needed
 
 describe('Health Check Routes', () => {
   beforeAll(async () => {
     try {
       await sequelize.authenticate(); // Ensure database connection
+      server = app.listen(0); // Start the app on a random available port for testing
     } catch (error) {
-      console.error('Database is down, tests may fail');
+      console.error('Database is down, tests may fail', error);
     }
   });
 
   afterAll(async () => {
-    await sequelize.close(); // Close DB connection after tests
+    if (server && server.close) {
+      await new Promise((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
+    await sequelize.close(); // Close DB connection
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks(); // Restore any mocked functions after each test
   });
 
   test('GET /healthz should return 200 OK when the database is up', async () => {
@@ -42,11 +53,9 @@ describe('Health Check Routes', () => {
 
   test('Database down should return 503 Service Unavailable', async () => {
     jest.spyOn(sequelize, 'authenticate').mockRejectedValue(new Error('Database is down'));
-    
-    const response = await request(app).get('/healthz');
-    
-    expect(response.status).toBe(503);
 
-    sequelize.authenticate.mockRestore(); 
+    const response = await request(app).get('/healthz');
+
+    expect(response.status).toBe(503);
   });
 });
