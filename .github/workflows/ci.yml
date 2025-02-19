@@ -56,5 +56,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
           DB_HOST: localhost
+          NODE_ENV: test
           PORT: 8080
-        run: npm test -- --forceExit
+          CI: true
+        run: npm test 

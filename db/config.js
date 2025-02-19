@@ -9,7 +9,10 @@ const dbHost = process.env.DB_HOST;
 let sequelize = new Sequelize(dbName, dbUser, dbPass, {
     host: dbHost,
     dialect: 'postgres',
-    logging: false
+    logging: false,
+    pool: {
+        idle: 10000
+      }
 });
 
 async function connectWithDatabaseCreation() {
