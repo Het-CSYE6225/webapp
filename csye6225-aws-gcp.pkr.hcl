@@ -88,7 +88,8 @@ build {
   provisioner "shell" {
     inline = [
       "chmod +x /tmp/webapp/scripts/setup.sh",
-      
+
+
       "/tmp/webapp/scripts/setup.sh"
     ]
   }
