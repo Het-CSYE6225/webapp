@@ -42,9 +42,9 @@ variable "db_host" {
 }
 
 source "amazon-ebs" "aws_image" {
-  region                  = var.aws_region
-  instance_type           = "t2.micro"
-  ami_name                = "custom-node-postgres-app-{{timestamp}}"
+  region        = var.aws_region
+  instance_type = "t2.micro"
+  ami_name      = "custom-node-postgres-app-{{timestamp}}"
   source_ami_filter {
     filters = {
       name                = "ubuntu/images/hvm-ssd/ubuntu-focal-24.04-amd64-server-*"
@@ -54,7 +54,7 @@ source "amazon-ebs" "aws_image" {
     owners      = ["099720109477"] # Canonical
     most_recent = true
   }
-  ssh_username            = "ubuntu"
+  ssh_username = "ubuntu"
   ami_block_device_mappings {
     device_name           = "/dev/sda1"
     volume_size           = 15
@@ -88,6 +88,7 @@ build {
   provisioner "shell" {
     inline = [
       "chmod +x /tmp/webapp/scripts/setup.sh",
+      
       "/tmp/webapp/scripts/setup.sh"
     ]
   }
