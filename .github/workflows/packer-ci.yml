@@ -16,10 +16,13 @@ jobs:
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
         with:
-          version: "1.9.4" # Use the required packer version
+          version: "1.9.4" # Use the required Packer version
 
       - name: Run packer fmt check
         run: packer fmt -check csye6225-aws-gcp.pkr.hcl
+
+      - name: Initialize Packer plugins
+        run: packer init csye6225-aws-gcp.pkr.hcl
 
       - name: Run packer validate
         run: packer validate -var-file=".env.pkrvars.hcl" csye6225-aws-gcp.pkr.hcl
