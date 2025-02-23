@@ -1,0 +1,7 @@
+aws_region     = "us-east-1"
+gcp_project_id = "webapp-451800"
+gcp_region     = "us-central1"
+db_name        = "cloud_app"
+db_user        = "postgres"
+db_password    = "Tejal123"
+db_host        = "localhost"
