@@ -91,7 +91,7 @@ build {
 
   # Copy the entire webapp directory to the target machine
   provisioner "file" {
-    source      = "./webapp/"
+    source      = "./"
     destination = "/tmp/webapp/"
   }
 
