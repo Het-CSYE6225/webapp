@@ -66,6 +66,7 @@ source "amazon-ebs" "aws_image" {
   }
 }
 
+
 source "googlecompute" "gcp_image" {
   project_id              = var.gcp_project_id
   zone                    = "${var.gcp_region}-a"
