@@ -42,6 +42,7 @@ variable "db_host" {
 }
 
 source "amazon-ebs" "aws_image" {
+  profile       = "dev"
   region        = var.aws_region
   instance_type = "t2.micro"
   ami_name      = "custom-node-postgres-app-{{timestamp}}"
@@ -82,18 +83,27 @@ build {
   name    = "custom-node-postgres-image"
   sources = ["source.amazon-ebs.aws_image", "source.googlecompute.gcp_image"]
 
+  provisioner "shell" {
+    inline = [
+      "mkdir -p /tmp/webapp"
+    ]
+  }
+
   provisioner "file" {
-    source      = "webapp/"
+    source      = "./"
     destination = "/tmp/webapp"
   }
 
   provisioner "shell" {
+    environment_vars = [
+      "DB_NAME=${var.db_name}",
+      "DB_USER=${var.db_user}",
+      "DB_PASSWORD=${var.db_password}",
+      "DB_HOST=${var.db_host}"
+    ]
     inline = [
       "chmod +x /tmp/webapp/scripts/setup.sh",
-
-
       "/tmp/webapp/scripts/setup.sh"
     ]
   }
-
 }
