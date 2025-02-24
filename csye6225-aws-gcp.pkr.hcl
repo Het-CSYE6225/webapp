@@ -72,7 +72,7 @@ source "googlecompute" "gcp_image" {
   machine_type            = "e2-medium"
   image_name              = "custom-node-postgres-app-{{timestamp}}"
   source_image_family     = "ubuntu-2204-lts"
-  source_image_project_id = "ubuntu-os-cloud"
+  source_image_project_id = ["ubuntu-os-cloud"]
   ssh_username            = "packer"
 }
 
