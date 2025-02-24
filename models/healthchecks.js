@@ -16,4 +16,6 @@ const HealthCheck = sequelize.define('HealthCheck', {
   tableName: 'health_checks'
 });
 
+
+
 module.exports = HealthCheck;

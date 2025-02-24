@@ -1,0 +1,37 @@
+name: Packer CI Status Check
+
+on:
+  pull_request:
+    paths:
+      - '**.pkr.hcl'
+      - '.github/workflows/packer-ci.yml'
+
+jobs:
+  packer_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          version: "1.9.4" # Use the required Packer version
+
+      - name: Run packer fmt check
+        run: packer fmt -check csye6225-aws-gcp.pkr.hcl
+
+      - name: Initialize Packer plugins
+        run: packer init csye6225-aws-gcp.pkr.hcl
+
+      - name: Run packer validate
+        run: |
+          packer validate \
+            -var "aws_region=${{ secrets.AWS_REGION }}" \
+            -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var "gcp_region=${{ secrets.GCP_REGION }}" \
+            -var "db_name=${{ secrets.DB_NAME }}" \
+            -var "db_user=${{ secrets.DB_USER }}" \
+            -var "db_password=${{ secrets.DB_PASS }}" \
+            csye6225-aws-gcp.pkr.hcl

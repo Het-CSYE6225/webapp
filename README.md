@@ -62,6 +62,7 @@ curl -vvvv -XPUT http://localhost:8080/healthz
 curl -vvvv -XPOST http://localhost:8080/healthz
 curl -vvvv -XPATCH http://localhost:8080/healthz
 curl -vvvv -XDELETE http://localhost:8080/healthz
+curl -vvvv -XOPTIONS http://localhost:8080/healthz
 
 ```
 
@@ -75,3 +76,5 @@ To contribute to this project:
 2. **Create a new branch** - Make changes in a new branch in your forked repository.
 3. **Commit Changes** - Use clear and descriptive commit messages.
 4. **Submit a Pull Request** - Open a pull request from your branch to the main repository.
+
+
