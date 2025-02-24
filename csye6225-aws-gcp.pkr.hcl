@@ -47,9 +47,9 @@ source "amazon-ebs" "aws_image" {
   ami_name      = "custom-node-postgres-app-{{timestamp}}"
   source_ami_filter {
     filters = {
-      name                = "ubuntu/images/hvm-ssd/ubuntu-noble-24.04-amd64-server-*"
-      virtualization-type = "hvm"
+      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
       root-device-type    = "ebs"
+      virtualization-type = "hvm"
     }
     owners      = ["099720109477"] # Canonical
     most_recent = true
@@ -66,14 +66,13 @@ source "amazon-ebs" "aws_image" {
   }
 }
 
-
 source "googlecompute" "gcp_image" {
   project_id              = var.gcp_project_id
   zone                    = "${var.gcp_region}-a"
   machine_type            = "e2-medium"
   image_name              = "custom-node-postgres-app-{{timestamp}}"
   source_image_family     = "ubuntu-2204-lts"
-  source_image_project_id = ["ubuntu-os-cloud"]
+  source_image_project_id = "ubuntu-os-cloud"
   ssh_username            = "packer"
 }
 
@@ -87,12 +86,15 @@ build {
   }
 
   provisioner "shell" {
+    environment_vars = [
+      "DB_NAME=${var.db_name}",
+      "DB_USER=${var.db_user}",
+      "DB_PASSWORD=${var.db_password}",
+      "DB_HOST=${var.db_host}"
+    ]
     inline = [
       "chmod +x /tmp/webapp/scripts/setup.sh",
-
-
       "/tmp/webapp/scripts/setup.sh"
     ]
   }
-
 }
