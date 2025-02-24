@@ -6,13 +6,14 @@ const dbPass = process.env.DB_PASS;
 const dbHost = process.env.DB_HOST;
 
 // Create initial Sequelize instance
-const Sequelize = require('sequelize');
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
-  host: process.env.DB_HOST,
-  dialect: 'postgres',
-  port: process.env.DB_PORT,
+let sequelize = new Sequelize(dbName, dbUser, dbPass, {
+    host: dbHost,
+    dialect: 'postgres',
+    logging: false,
+    pool: {
+        idle: 10000
+    }
 });
-
 
 async function connectWithDatabaseCreation() {
     try {
