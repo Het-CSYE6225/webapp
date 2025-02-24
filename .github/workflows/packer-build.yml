@@ -7,8 +7,22 @@ on:
 
 jobs:
   build-and-test:
-    # ✅ Removed 'if' to run on open, update, and merge events
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -22,7 +36,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 5
+          done
+
       - name: Run integration tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_NAME: ${{ secrets.DB_NAME }}
         run: npm test
 
       - name: Build application artifact
@@ -51,4 +78,6 @@ jobs:
 
       - name: Build custom images
         run: |
-          packer build -var "aws_region=${{ secrets.AWS_REGION }}" -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" csye6225-aws-gcp.pkr.hcl
+          packer build -var "aws_region=${{ secrets.AWS_REGION }}" \
+                       -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
+                       csye6225-aws-gcp.pkr.hcl
