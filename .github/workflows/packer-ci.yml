@@ -25,4 +25,4 @@ jobs:
         run: packer init csye6225-aws-gcp.pkr.hcl
 
       - name: Run packer validate
-        run: packer validate -var-file=".env.pkrvars.hcl" csye6225-aws-gcp.pkr.hcl
+        run: packer validate  csye6225-aws-gcp.pkr.hcl
