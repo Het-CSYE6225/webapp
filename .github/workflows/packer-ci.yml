@@ -9,6 +9,7 @@ on:
 jobs:
   packer_check:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,4 +26,12 @@ jobs:
         run: packer init csye6225-aws-gcp.pkr.hcl
 
       - name: Run packer validate
-        run: packer validate  csye6225-aws-gcp.pkr.hcl
+        run: |
+          packer validate \
+            -var "aws_region=${{ secrets.AWS_REGION }}" \
+            -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var "gcp_region=${{ secrets.GCP_REGION }}" \
+            -var "db_name=${{ secrets.DB_NAME }}" \
+            -var "db_user=${{ secrets.DB_USER }}" \
+            -var "db_password=${{ secrets.DB_PASS }}" \
+            csye6225-aws-gcp.pkr.hcl
