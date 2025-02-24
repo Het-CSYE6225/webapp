@@ -46,14 +46,15 @@ source "amazon-ebs" "aws_image" {
   instance_type = "t2.micro"
   ami_name      = "custom-node-postgres-app-{{timestamp}}"
   source_ami_filter {
-    filters = {
-      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
-      root-device-type    = "ebs"
-      virtualization-type = "hvm"
-    }
-    owners      = ["099720109477"] # Canonical
-    most_recent = true
+  filters = {
+    name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+    root-device-type    = "ebs"
+    virtualization-type = "hvm"
   }
+  owners      = ["099720109477"] # Canonical
+  most_recent = true
+}
+
   ssh_username = "ubuntu"
   ami_block_device_mappings {
     device_name           = "/dev/sda1"
@@ -65,6 +66,7 @@ source "amazon-ebs" "aws_image" {
     Name = "CustomNodeAppImage"
   }
 }
+
 
 source "googlecompute" "gcp_image" {
   project_id              = var.gcp_project_id
@@ -86,15 +88,12 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "DB_NAME=${var.db_name}",
-      "DB_USER=${var.db_user}",
-      "DB_PASSWORD=${var.db_password}",
-      "DB_HOST=${var.db_host}"
-    ]
     inline = [
       "chmod +x /tmp/webapp/scripts/setup.sh",
+
+
       "/tmp/webapp/scripts/setup.sh"
     ]
   }
+
 }
