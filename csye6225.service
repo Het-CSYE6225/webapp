@@ -12,3 +12,8 @@ EnvironmentFile=/opt/webapp/.env
 
 [Install]
 WantedBy=multi-user.target
+
+# Reload systemd and enable/start service
+sudo systemctl daemon-reload
+sudo systemctl enable csye6225.service
+sudo systemctl start csye6225.service
