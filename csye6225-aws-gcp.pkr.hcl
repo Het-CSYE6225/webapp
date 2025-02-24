@@ -32,7 +32,7 @@ variable "db_user" {
   type = string
 }
 
-variable "db_pass" {
+variable "db_password" {
   type = string
 }
 
