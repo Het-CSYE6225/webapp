@@ -3,12 +3,15 @@ const app = require('../app');
 const { sequelize } = require('../db/config'); 
 const { setImmediate } = require('timers'); 
 const { globalAgent } = require('http'); 
+require('dotenv').config();
+
 let server; 
 
 describe('Health Check Routes', () => {
   beforeAll(async () => {
     try {
       await sequelize.authenticate(); 
+      await sequelize.sync({ force: true });
       server = app.listen(0); 
     } catch (error) {
       console.error('Database is down, tests may fail', error);

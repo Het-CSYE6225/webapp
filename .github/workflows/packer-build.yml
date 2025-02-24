@@ -14,8 +14,8 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: testdb
+          POSTGRES_PASSWORD: Tejal123
+          POSTGRES_DB: cloud_db
         ports:
           - 5432:5432
         options: >-
