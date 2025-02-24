@@ -83,7 +83,7 @@ build {
   sources = ["source.amazon-ebs.aws_image", "source.googlecompute.gcp_image"]
 
   provisioner "file" {
-    source      = "${path.root}/webapp"
+    source      = "${path.root}/"
     destination = "/tmp/webapp"
   }
 
