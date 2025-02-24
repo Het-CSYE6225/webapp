@@ -47,7 +47,7 @@ source "amazon-ebs" "aws_image" {
   ami_name      = "custom-node-postgres-app-{{timestamp}}"
   source_ami_filter {
     filters = {
-      name                = "ubuntu/images/hvm-ssd/ubuntu-focal-24.04-amd64-server-*"
+      name                = "ubuntu/images/hvm-ssd/ubuntu-noble-24.04-amd64-server-*"
       virtualization-type = "hvm"
       root-device-type    = "ebs"
     }
@@ -71,8 +71,8 @@ source "googlecompute" "gcp_image" {
   zone                    = "${var.gcp_region}-a"
   machine_type            = "e2-medium"
   image_name              = "custom-node-postgres-app-{{timestamp}}"
-  source_image_family     = "ubuntu-2404-lts"
-  source_image_project_id = ["ubuntu-os-cloud"]
+  source_image_family     = "ubuntu-2204-lts"
+  source_image_project_id = "ubuntu-os-cloud"
   ssh_username            = "packer"
 }
 
