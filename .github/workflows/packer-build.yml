@@ -1,9 +1,10 @@
 name: Packer Image Build
 
+
 on:
-  pull_request:
-    types: [opened, synchronize, closed]
-    branches: [main]
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-test:
