@@ -93,7 +93,4 @@ jobs:
 
       - name: Build custom images
         run: |
-          packer build -var-file=".env.pkrvars.hcl" \
-                 -var "aws_region=${{ secrets.AWS_REGION }}" \
-                 -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
-                 csye6225-aws-gcp.pkr.hcl
+           packer build -var-file=".env.pkrvars.hcl" csye6225-aws-gcp.pkr.hcl
