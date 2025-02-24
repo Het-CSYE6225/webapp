@@ -81,6 +81,10 @@ jobs:
       - name: Install Packer
         uses: hashicorp/setup-packer@v2
 
+      
+      - name: Initialize Packer plugins
+        run: packer init csye6225-aws-gcp.pkr.hcl
+
       - name: Format check
         run: packer fmt -check csye6225-aws-gcp.pkr.hcl
 
