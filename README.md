@@ -6,7 +6,7 @@ This project is a backend web application designed to be cloud-native, leveragin
 
 Before setting up the project, ensure you have the following installed:
 - **Node.js**: Node.js 16.x or later. [Download Node.js](https://nodejs.org/en/download/)
-- **PostgreSQL**: PostgreSQL 12.x or later. [Download PostgreSQL](https://www.postgresql.org/download/)
+- **PostgreSQL**: PosddstgreSQL 12.x or later. [Download PostgreSQL](https://www.postgresql.org/download/)
 - **Git**: [Install Git](https://git-scm.com/downloads) for version control.
 
 ### Install Dependencies
