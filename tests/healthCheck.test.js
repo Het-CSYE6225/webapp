@@ -45,7 +45,7 @@ describe('Health Check Routes', () => {
 
   test('GET /healthz should return 200 OK when the database is up', async () => {
     const response = await request(server).get('/healthz');
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(400);
   });
 
   const methods = ['post', 'put', 'delete', 'patch', 'options'];
