@@ -107,8 +107,10 @@ build {
     ]
   }
 
-  # Post-Processor to share AMI with demo account
-  post-processor "amazon-ami-management" {
-    ami_users = ["396913717917", "376129858668"]
+  # Post-Processor to Share AMI
+  post-processor "shell-local" {
+    inline = [
+      "aws ec2 modify-image-attribute --image-id {{ build.ImageId }} --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
+    ]
   }
 }
