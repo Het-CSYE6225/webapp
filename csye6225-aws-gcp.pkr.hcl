@@ -66,12 +66,7 @@ source "amazon-ebs" "aws_image" {
   tags = {
     Name = "CustomNodeAppImage"
   }
-
-  launch_permission {
-    user_ids = ["396913717917", "376129858668"]
-  }
 }
-
 
 source "googlecompute" "gcp_image" {
   project_id              = var.gcp_project_id
@@ -110,5 +105,10 @@ build {
       "chmod +x /tmp/webapp/scripts/setup.sh",
       "/tmp/webapp/scripts/setup.sh"
     ]
+  }
+
+  # Post-Processor to share AMI with demo account
+  post-processor "amazon-ami-management" {
+    ami_users = ["396913717917", "376129858668"]
   }
 }
