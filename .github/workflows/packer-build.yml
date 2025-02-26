@@ -115,5 +115,13 @@ jobs:
               AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=custom-node-postgres-app-*" --query 'Images[-1].ImageId' --output text)
               aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "{\"Add\":[{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEV }}\"},{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEMO }}\"}]}"
 
-       
-       
+      - name: Share GCP Image with Demo Project
+        run: |
+                IMAGE_NAME=$(gcloud compute images list --project=${{ secrets.GCP_PROJECT_ID }} --filter="name~custom-node-postgres-app-*" --sort-by="~creationTimestamp" --limit=1 --format="value(NAME)")
+                echo "Extracted Image Name: $IMAGE_NAME"
+                if [ -z "$IMAGE_NAME" ]; then
+                  echo "Error: No GCP image found!"
+                  exit 1
+                fi
+                gcloud compute images add-iam-policy-binding $IMAGE_NAME --project=${{ secrets.GCP_PROJECT_ID }} --member="project:${{ secrets.GCP_PROJECT_ID_DEMO }}" --role="roles/compute.imageUser"
+      
