@@ -117,17 +117,17 @@ build {
     output = "ami_manifest.json"
   }
 
-post-processor "shell-local" {
-  only = ["amazon-ebs.aws_image"]
-  inline = [
-    "echo 'Looking for AMI ID in ami_manifest.json...'",
-    "cat ami_manifest.json",  # Print the manifest for debugging
-    "AMI_ID=$(jq -r '.builds[] | select(.name == \"custom-node-***-image.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
-    "echo 'Extracted AMI ID:' $AMI_ID",
-    "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found in ami_manifest.json!' && exit 1",
-    "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
-  ]
-}
+  post-processor "shell-local" {
+    only = ["amazon-ebs.aws_image"]
+    inline = [
+      "echo 'Looking for AMI ID in ami_manifest.json...'",
+      "cat ami_manifest.json", # Print the manifest for debugging
+      "AMI_ID=$(jq -r '.builds[] | select(.name == \"custom-node-***-image.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
+      "echo 'Extracted AMI ID:' $AMI_ID",
+      "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found in ami_manifest.json!' && exit 1",
+      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
+    ]
+  }
 
 
 
