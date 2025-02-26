@@ -124,7 +124,7 @@ build {
       "AMI_ID=$(aws ec2 describe-images --owners self --filters 'Name=name,Values=custom-node-postgres-app-*' --query 'Images[-1].ImageId' --output text)",
       "echo 'Extracted AMI ID:' $AMI_ID",
       "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found in AWS!' && exit 1",
-      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission '{\"Add\":[{\"UserId\":\"396913717917\"},{\"UserId\":\"376129858668\"}]}' --region ${var.aws_region}"
+      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission \"{\\\"Add\\\":[{\\\"UserId\\\":\\\"396913717917\\\"},{\\\"UserId\\\":\\\"376129858668\\\"}]}\" --region ${var.aws_region}"
     ]
   }
 
