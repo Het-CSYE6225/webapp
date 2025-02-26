@@ -113,11 +113,19 @@ build {
   }
 
   # Step 2: Extract AMI ID and Share It
+  post-processor "manifest" {
+    output = "ami_manifest.json"
+  }
+
   post-processor "shell-local" {
+    only = ["amazon-ebs.aws_image"] # Ensure this runs ONLY for AWS
     inline = [
-      "AMI_ID=$(jq -r '.builds[] | select(.name == \"source.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
+      "AMI_ID=$(jq -r '.builds[] | select(.name == \"custom-node-postgres-image.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
+      "if [[ -z \"$AMI_ID\" ]]; then echo 'Error: AMI_ID not found!' && exit 1; fi",
+      "echo 'Extracted AMI ID: ' $AMI_ID",
       "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
     ]
   }
+
 }
 
