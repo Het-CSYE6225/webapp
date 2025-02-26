@@ -41,8 +41,8 @@ variable "db_host" {
   default = "localhost"
 }
 variable "gcp_demo_project_id" {
-  type = string
-   default = ""
+  type    = string
+  default = ""
 }
 
 source "amazon-ebs" "aws_image" {
