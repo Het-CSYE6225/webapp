@@ -107,10 +107,17 @@ build {
     ]
   }
 
-  # Post-Processor to Share AMI
+  # Step 1: Capture AMI details
+  post-processor "manifest" {
+    output = "ami_manifest.json"
+  }
+
+  # Step 2: Extract AMI ID and Share It
   post-processor "shell-local" {
     inline = [
-      "aws ec2 modify-image-attribute --image-id {{ build.ImageId }} --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
+      "AMI_ID=$(jq -r '.builds[] | select(.name == \"source.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
+      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
     ]
   }
 }
+
