@@ -94,7 +94,7 @@ jobs:
             -var "aws_region=${{ secrets.AWS_REGION }}" \
             -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var "gcp_region=${{ secrets.GCP_REGION }}" \
-            -var "gcp_demo_project_id=${{ secrets.GCP_PROJECT_ID_DEMO }}" \
+            -var "gcp_demo_service_account=${{ secrets.GCP_DEMO_SERVICE_ACCOUNT }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
             -var "db_user=${{ secrets.DB_USER }}" \
             -var "db_password=${{ secrets.DB_PASS }}" \
@@ -106,7 +106,7 @@ jobs:
             -var "aws_region=${{ secrets.AWS_REGION }}" \
             -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var "gcp_region=${{ secrets.GCP_REGION }}" \
-            -var "gcp_demo_project_id=${{ secrets.GCP_PROJECT_ID_DEMO }}" \
+            -var "gcp_demo_service_account=${{ secrets.GCP_DEMO_SERVICE_ACCOUNT }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
             -var "db_user=${{ secrets.DB_USER }}" \
             -var "db_password=${{ secrets.DB_PASS }}" \
@@ -127,6 +127,6 @@ jobs:
                 fi
                 gcloud compute images add-iam-policy-binding $IMAGE_NAME \
                   --project=${{ secrets.GCP_PROJECT_ID }} \
-                  --member="project:${{ secrets.GCP_PROJECT_ID_DEMO }}" \
+                  --member="serviceAccount:${{ secrets.GCP_DEMO_SERVICE_ACCOUNT }}"
                   --role="roles/compute.imageUser"
       
