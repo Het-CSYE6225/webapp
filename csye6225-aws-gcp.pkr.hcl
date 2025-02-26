@@ -66,7 +66,12 @@ source "amazon-ebs" "aws_image" {
   tags = {
     Name = "CustomNodeAppImage"
   }
+  launch_permission {
+    user_ids = ["396913717917", "376129858668"]
+  }
 }
+
+
 
 
 source "googlecompute" "gcp_image" {
