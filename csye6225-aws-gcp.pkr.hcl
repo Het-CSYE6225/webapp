@@ -117,15 +117,15 @@ build {
     output = "ami_manifest.json"
   }
 
- post-processor "shell-local" {
-  only = ["amazon-ebs.aws_image"]
-  inline = [
-    "AMI_ID=$(jq -r '.builds[] | select(.name == \"custom-node-postgres-image.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
-    "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found!' && exit 1",
-    "echo 'Extracted AMI ID:' $AMI_ID",
-    "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
-  ]
-}
+  post-processor "shell-local" {
+    only = ["amazon-ebs.aws_image"]
+    inline = [
+      "AMI_ID=$(jq -r '.builds[] | select(.name == \"custom-node-postgres-image.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
+      "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found!' && exit 1",
+      "echo 'Extracted AMI ID:' $AMI_ID",
+      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
+    ]
+  }
 
 
 }
