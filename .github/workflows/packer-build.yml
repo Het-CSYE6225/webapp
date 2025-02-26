@@ -113,6 +113,7 @@ jobs:
       - name: Share AMI with Dev and Demo accounts
         run: |
               AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=custom-node-postgres-app-*" --query 'Images[-1].ImageId' --output text)
-              aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.AWS_ACCOUNT_ID_DEV }}},{UserId=${{ secrets.AWS_ACCOUNT_ID_DEMO }}]"
+              aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "{\"Add\":[{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEV }}\"},{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEMO }}\"}]}"
+
        
        
