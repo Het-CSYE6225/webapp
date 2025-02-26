@@ -40,7 +40,10 @@ variable "db_host" {
   type    = string
   default = "localhost"
 }
-
+variable "gcp_demo_service_account" {
+  type    = string
+  default = ""
+}
 source "amazon-ebs" "aws_image" {
   profile       = "dev"
   region        = var.aws_region
@@ -120,10 +123,22 @@ build {
   post-processor "shell-local" {
     only = ["amazon-ebs.aws_image"]
     inline = [
-      "AMI_ID=$(jq -r '.builds[] | select(.name == \"custom-node-postgres-image.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
-      "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found!' && exit 1",
+      "echo 'Fetching latest AMI ID from AWS...'",
+      "AMI_ID=$(aws ec2 describe-images --owners self --filters 'Name=name,Values=custom-node-postgres-app-*' --query 'Images[-1].ImageId' --output text)",
       "echo 'Extracted AMI ID:' $AMI_ID",
-      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
+      "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found in AWS!' && exit 1",
+      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission \"{\\\"Add\\\":[{\\\"UserId\\\":\\\"396913717917\\\"},{\\\"UserId\\\":\\\"376129858668\\\"}]}\" --region ${var.aws_region}"
+    ]
+  }
+  post-processor "shell-local" {
+    only = ["googlecompute.gcp_image"]
+    inline = [
+      "echo 'Fetching latest GCP Image ID...'",
+      "IMAGE_NAME=$(gcloud compute images list --project=${var.gcp_project_id} --filter='name~custom-node-postgres-app-*' --sort-by='~creationTimestamp' --limit=1 --format='value(NAME)')",
+      "echo 'Extracted Image Name: ' $IMAGE_NAME",
+      "[ -z \"$IMAGE_NAME\" ] && echo 'Error: Image name not found in GCP!' && exit 1",
+      "echo 'Granting access to demo project...'",
+      "gcloud compute images add-iam-policy-binding \"$IMAGE_NAME\" --project=\"${var.gcp_project_id}\" --member=\"serviceAccount:${var.gcp_demo_service_account}\" --role=\"roles/compute.imageUser\""
     ]
   }
 

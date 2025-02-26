@@ -6,6 +6,7 @@ on:
     branches:
       - main
 
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -94,6 +95,7 @@ jobs:
             -var "aws_region=${{ secrets.AWS_REGION }}" \
             -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var "gcp_region=${{ secrets.GCP_REGION }}" \
+            -var "gcp_demo_service_account=${{ secrets.GCP_DEMO_SERVICE_ACCOUNT }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
             -var "db_user=${{ secrets.DB_USER }}" \
             -var "db_password=${{ secrets.DB_PASS }}" \
@@ -105,6 +107,7 @@ jobs:
             -var "aws_region=${{ secrets.AWS_REGION }}" \
             -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var "gcp_region=${{ secrets.GCP_REGION }}" \
+            -var "gcp_demo_service_account=${{ secrets.GCP_DEMO_SERVICE_ACCOUNT }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
             -var "db_user=${{ secrets.DB_USER }}" \
             -var "db_password=${{ secrets.DB_PASS }}" \
@@ -113,6 +116,18 @@ jobs:
       - name: Share AMI with Dev and Demo accounts
         run: |
               AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=custom-node-postgres-app-*" --query 'Images[-1].ImageId' --output text)
-              aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.AWS_ACCOUNT_ID_DEV }}},{UserId=${{ secrets.AWS_ACCOUNT_ID_DEMO }}]"
-       
-       
+              aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "{\"Add\":[{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEV }}\"},{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEMO }}\"}]}"
+
+      - name: Share GCP Image with Demo Project
+        run: |
+                      IMAGE_NAME=$(gcloud compute images list --project=${{ secrets.GCP_PROJECT_ID }} --filter="name~custom-node-postgres-app-*" --sort-by="~creationTimestamp" --limit=1 --format="value(NAME)")
+                      echo "Extracted Image Name: $IMAGE_NAME"
+                      if [ -z "$IMAGE_NAME" ]; then
+                        echo "Error: No GCP image found!"
+                        exit 1
+                      fi
+                      gcloud compute images add-iam-policy-binding "$IMAGE_NAME" \
+                        --project="${{ secrets.GCP_PROJECT_ID }}" \
+                        --member="serviceAccount:${{ secrets.GCP_DEMO_SERVICE_ACCOUNT }}" \
+                        --role="roles/compute.imageUser"
+      
