@@ -68,7 +68,6 @@ source "amazon-ebs" "aws_image" {
   }
 }
 
-
 source "googlecompute" "gcp_image" {
   project_id              = var.gcp_project_id
   zone                    = "${var.gcp_region}-a"
@@ -107,4 +106,18 @@ build {
       "/tmp/webapp/scripts/setup.sh"
     ]
   }
+
+  # Step 1: Capture AMI details
+  post-processor "manifest" {
+    output = "ami_manifest.json"
+  }
+
+  # Step 2: Extract AMI ID and Share It
+  post-processor "shell-local" {
+    inline = [
+      "AMI_ID=$(jq -r '.builds[] | select(.name == \"source.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
+      "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
+    ]
+  }
 }
+
