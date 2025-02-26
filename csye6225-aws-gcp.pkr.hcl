@@ -120,11 +120,10 @@ build {
   post-processor "shell-local" {
     only = ["amazon-ebs.aws_image"]
     inline = [
-      "echo 'Looking for AMI ID in ami_manifest.json...'",
-      "cat ami_manifest.json", # Print the manifest for debugging
-      "AMI_ID=$(jq -r '.builds[] | select(.name == \"custom-node-***-image.amazon-ebs.aws_image\").artifact_id' ami_manifest.json | cut -d ':' -f2)",
+      "echo 'Fetching latest AMI ID from AWS...'",
+      "AMI_ID=$(aws ec2 describe-images --owners self --filters 'Name=name,Values=custom-node-postgres-app-*' --query 'Images[-1].ImageId' --output text)",
       "echo 'Extracted AMI ID:' $AMI_ID",
-      "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found in ami_manifest.json!' && exit 1",
+      "[ -z \"$AMI_ID\" ] && echo 'Error: AMI_ID not found in AWS!' && exit 1",
       "aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission 'Add=[{UserId=396913717917},{UserId=376129858668}]' --region ${var.aws_region}"
     ]
   }
