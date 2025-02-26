@@ -46,7 +46,6 @@ source "amazon-ebs" "aws_image" {
   region        = var.aws_region
   instance_type = "t2.micro"
   ami_name      = "custom-node-postgres-app-{{timestamp}}"
-  user_ids      = ["396913717917", "376129858668"]
   source_ami_filter {
     filters = {
       name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
@@ -66,6 +65,10 @@ source "amazon-ebs" "aws_image" {
   }
   tags = {
     Name = "CustomNodeAppImage"
+  }
+
+  launch_permission {
+    user_ids = ["396913717917", "376129858668"]
   }
 }
 
