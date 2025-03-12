@@ -72,7 +72,7 @@ source "amazon-ebs" "aws_image" {
 }
 
 source "googlecompute" "gcp_image" {
-  project_id              = var.gcp_project_id
+  project_id              = var.bad
   zone                    = "${var.gcp_region}-a"
   machine_type            = "e2-medium"
   image_name              = "custom-node-postgres-app-{{timestamp}}"
