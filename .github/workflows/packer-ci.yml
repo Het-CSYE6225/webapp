@@ -2,9 +2,8 @@ name: Packer CI Status Check
 
 on:
   pull_request:
-    paths:
-      - '**.pkr.hcl'
-      - '.github/workflows/packer-ci.yml'
+    branches:
+      - main 
 
 jobs:
   packer_check:
