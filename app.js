@@ -40,7 +40,7 @@ connectWithDatabaseCreation().then(() => {
     sequelize.sync({ alter: true })  
         .then(() => {
             console.log("Database & tables are ready!");
-            app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
+            app.listen(port, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${port}`));
         })
         .catch(err => {
             console.error('Unable to sync the database:', err);
@@ -50,3 +50,4 @@ connectWithDatabaseCreation().then(() => {
 });
 
 module.exports = app;
+
