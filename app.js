@@ -2,8 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const { sequelize, connectWithDatabaseCreation } = require('./db/config');
 const healthCheckRoutes = require('./routes/healthCheckRoutes');
+const fileRoutes = require('./routes/fileRoutes');
+
+
 const app = express();
 const port = process.env.PORT || 8080;
+
 
 app.disable('x-powered-by');
 app.use(express.json());
@@ -28,6 +32,8 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+app.use('/v1', fileRoutes); 
 
 connectWithDatabaseCreation().then(() => {
     app.use('/', healthCheckRoutes);
