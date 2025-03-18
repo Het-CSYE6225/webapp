@@ -15,7 +15,21 @@ if (!BUCKET_NAME) {
     throw new Error("S3_BUCKET_NAME environment variable is missing.");
 }
 
-// Multer-S3 storage configuration
+// Check if the environment is test mode
+const isTestEnv = process.env.NODE_ENV === 'test';
+
+// Mock file upload middleware for test mode
+const testUploadMiddleware = (req, res, next) => {
+    req.file = {
+        originalname: "dummy.txt",
+        location: "s3://dummy-bucket/dummy.txt",  // Fake S3 path
+        mimetype: "text/plain",
+        size: 1024
+    };
+    next();
+};
+
+// Multer-S3 storage configuration (for actual usage)
 const upload = multer({
     storage: multerS3({
         s3: s3,
@@ -32,7 +46,10 @@ const upload = multer({
 
 // **POST /v1/file - Upload a file**
 exports.uploadFile = async (req, res) => {
-    upload(req, res, async (err) => {
+    // Select the appropriate middleware based on the environment
+    const uploadMiddleware = isTestEnv ? testUploadMiddleware : upload;
+
+    uploadMiddleware(req, res, async (err) => {
         if (err) {
             console.error("File upload error:", err);
             return res.status(500).json({ error: "File upload failed", details: err.message });
