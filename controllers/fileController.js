@@ -9,6 +9,9 @@ const s3 = new S3Client({
     region: process.env.AWS_REGION || "us-east-1"
 });
 
+// Check if the environment is test mode
+const isTestEnv = process.env.NODE_ENV === 'test';
+
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 // Skip S3 validation if running in test mode
@@ -17,8 +20,7 @@ if (!isTestEnv && !BUCKET_NAME) {
 }
 
 
-// Check if the environment is test mode
-const isTestEnv = process.env.NODE_ENV === 'test';
+
 
 // Mock file upload middleware for test mode
 const testUploadMiddleware = (req, res, next) => {
