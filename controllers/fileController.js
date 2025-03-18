@@ -11,9 +11,11 @@ const s3 = new S3Client({
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
-if (!BUCKET_NAME) {
+// Skip S3 validation if running in test mode
+if (!isTestEnv && !BUCKET_NAME) {
     throw new Error("S3_BUCKET_NAME environment variable is missing.");
 }
+
 
 // Check if the environment is test mode
 const isTestEnv = process.env.NODE_ENV === 'test';
