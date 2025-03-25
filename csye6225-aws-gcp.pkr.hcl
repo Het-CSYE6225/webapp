@@ -40,10 +40,12 @@ variable "db_host" {
   type    = string
   default = "localhost"
 }
+
 variable "gcp_demo_service_account" {
   type    = string
   default = ""
 }
+
 source "amazon-ebs" "aws_image" {
   profile       = "dev"
   region        = var.aws_region
@@ -55,10 +57,9 @@ source "amazon-ebs" "aws_image" {
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
-    owners      = ["099720109477"] # Canonical
+    owners      = ["099720109477"] // Canonical
     most_recent = true
   }
-
   ssh_username = "ubuntu"
   ami_block_device_mappings {
     device_name           = "/dev/sda1"
@@ -110,12 +111,20 @@ build {
     ]
   }
 
-  # Step 1: Capture AMI details
-  post-processor "manifest" {
-    output = "ami_manifest.json"
+  # Install and configure the CloudWatch Agent
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y amazon-cloudwatch-agent",
+      "sudo wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb",
+      "sudo dpkg -i amazon-cloudwatch-agent.deb",
+      "echo '{\"metrics\":{\"metrics_collected\":{\"statsd\": {\"service_address\": \":8125\", \"metrics_aggregation_interval\": 10}}}}' | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
+      "sudo systemctl enable amazon-cloudwatch-agent",
+      "sudo systemctl start amazon-cloudwatch-agent"
+    ]
   }
 
-  # Step 2: Extract AMI ID and Share It
+  # Capture AMI and GCP Image details and configure access
   post-processor "manifest" {
     output = "ami_manifest.json"
   }
@@ -141,7 +150,4 @@ build {
       "gcloud compute images add-iam-policy-binding \"$IMAGE_NAME\" --project=\"${var.gcp_project_id}\" --member=\"serviceAccount:${var.gcp_demo_service_account}\" --role=\"roles/compute.imageUser\""
     ]
   }
-
-
 }
-
