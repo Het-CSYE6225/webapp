@@ -114,15 +114,15 @@ build {
   # Install and configure the CloudWatch Agent
   provisioner "shell" {
     inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y amazon-cloudwatch-agent",
+      "sudo apt-get update && sudo apt-get upgrade -y",
       "sudo wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb",
-      "sudo dpkg -i amazon-cloudwatch-agent.deb",
+      "sudo dpkg -i amazon-cloudwatch-agent.deb || { echo 'Failed to install amazon-cloudwatch-agent'; exit 1; }",
       "echo '{\"metrics\":{\"metrics_collected\":{\"statsd\": {\"service_address\": \":8125\", \"metrics_aggregation_interval\": 10}}}}' | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
       "sudo systemctl enable amazon-cloudwatch-agent",
       "sudo systemctl start amazon-cloudwatch-agent"
     ]
   }
+
 
   # Capture AMI and GCP Image details and configure access
   post-processor "manifest" {
