@@ -7,32 +7,31 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt update -y && sudo apt upgrade -y
 
 # Add PostgreSQL repository securely
-#wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | sudo tee /usr/share/keyrings/postgresql.gpg > /dev/null
-#echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | sudo tee /usr/share/keyrings/postgresql.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
 
-#sudo apt update && sudo apt install -y postgresql-14 postgresql-contrib-14
-sudo apt install -y unzip curl nodejs npm
+sudo apt update && sudo apt install -y postgresql-14 postgresql-contrib-14 unzip curl nodejs npm
 
 # Ensure correct working directory
 cd /tmp
 
 # PostgreSQL setup
-#sudo systemctl start postgresql && sudo systemctl enable postgresql
-#sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/14/main/postgresql.conf
-#echo "host    all    all    0.0.0.0/0    md5" | sudo tee -a /etc/postgresql/14/main/pg_hba.conf
+sudo systemctl start postgresql && sudo systemctl enable postgresql
+sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/14/main/postgresql.conf
+echo "host    all    all    0.0.0.0/0    md5" | sudo tee -a /etc/postgresql/14/main/pg_hba.conf
 
-#sudo chown -R postgres:postgres /var/lib/postgresql
-#sudo systemctl restart postgresql
+sudo chown -R postgres:postgres /var/lib/postgresql
+sudo systemctl restart postgresql
 
 # Database setup
-#DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='cloud_app'")
-#[ "$DB_EXISTS" != "1" ] && sudo -u postgres psql -c "CREATE DATABASE cloud_app;"
+DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='cloud_app'")
+[ "$DB_EXISTS" != "1" ] && sudo -u postgres psql -c "CREATE DATABASE cloud_app;"
 
-#USER_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='postgres'")
-#[ "$USER_EXISTS" != "1" ] && sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'Tejal123';"
+USER_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='postgres'")
+[ "$USER_EXISTS" != "1" ] && sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'Tejal123';"
 
-#sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cloud_app TO postgres;"
-#sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'Tejal123';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cloud_app TO postgres;"
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'Tejal123';"
 
 # App user and group
 sudo groupadd -f cloudgroup
