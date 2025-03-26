@@ -20,21 +20,21 @@ const sendTimingMetric = (name, durationMs) => {
 
 const trackApiMetrics = (req, res, next) => {
   const start = Date.now();
+
   res.on('finish', () => {
     const duration = Date.now() - start;
-
     const method = req.method;
 
-    
+    // Normalize full route
     let fullPath = (req.baseUrl + (req.route?.path || '')).replace(/\/+/g, '/');
-
-    fullPath = fullPath.replace(/\/$/, '') || '/';
-
-    fullPath = fullPath.replace(/\d+/g, ':id');
+    fullPath = fullPath.replace(/\/$/, '') || '/';        
+    fullPath = fullPath.replace(/:\w+/g, 'id');           
+    fullPath = fullPath.replace(/[^a-zA-Z0-9/_\-\.]/g, ''); 
 
     sendCustomMetric(`API.${method}.${fullPath}.CallCount`);
     sendTimingMetric(`API.${method}.${fullPath}.Duration`, duration);
   });
+
   next();
 };
 
