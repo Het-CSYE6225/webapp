@@ -3,7 +3,7 @@ const express = require('express');
 const { sequelize, connectWithDatabaseCreation } = require('./db/config');
 const healthCheckRoutes = require('./routes/healthCheckRoutes');
 const fileRoutes = require('./routes/fileRoutes');
-const { trackApiMetrics } = require('./config/metrics'); // ✅ Use cleaner middleware
+const { trackApiMetrics } = require('./config/metrics'); 
 
 const app = express();
 const port = process.env.PORT || 8080;

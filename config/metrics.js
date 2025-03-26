@@ -30,7 +30,7 @@ const trackApiMetrics = (req, res, next) => {
   res.on('finish', () => {
     const duration = Date.now() - start;
     const method = req.method;
-    const route = req.route?.path || req.path;
+    const route = req.baseUrl + (req.route?.path || '');
     sendCustomMetric(`API.${method}.${route}.CallCount`, 1);
     sendCustomMetric(`API.${method}.${route}.Duration`, duration, 'Milliseconds');
   });
