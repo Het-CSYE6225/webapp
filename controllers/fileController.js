@@ -10,10 +10,11 @@ const { sendCustomMetric } = require('../config/metrics');
 const s3 = new S3Client({
     region: process.env.AWS_REGION || "us-east-1"
 });
+const isTestEnv = process.env.NODE_ENV === 'test';
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
-if (!BUCKET_NAME) {
+if (!isTestEnv && !BUCKET_NAME) {
     throw new Error("S3_BUCKET_NAME environment variable is missing.");
 }
 
