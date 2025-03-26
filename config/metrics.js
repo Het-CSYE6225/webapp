@@ -1,50 +1,52 @@
 // /config/metrics.js
-const AWS = require('aws-sdk');
-const cloudwatch = new AWS.CloudWatch({ region: process.env.AWS_REGION });
+const StatsD = require('hot-shots');
 
-const sendCustomMetric = (name, value, unit = 'Count', dimensions = []) => {
-  const params = {
-    MetricData: [
-      {
-        MetricName: name,
-        Dimensions: [
-          { Name: 'App', Value: 'MyWebApp' },
-          ...dimensions
-        ],
-        Timestamp: new Date(),
-        Value: value,
-        Unit: unit
-      }
-    ],
-    Namespace: 'MyWebApp/Metrics'
-  };
+const statsd = new StatsD({
+  host: 'localhost',
+  port: 8125,
+  prefix: 'MyWebApp.',
+  errorHandler: (error) => {
+    console.error("StatsD Error:", error);
+  }
+});
 
-  cloudwatch.putMetricData(params, (err, data) => {
-    if (err) console.error("CloudWatch metric error:", err);
-    else console.log(`Metric sent: ${name} = ${value}`);
-  });
+const sendCustomMetric = (name, value = 1) => {
+  statsd.increment(name, value);
+};
+
+const sendTimingMetric = (name, durationMs) => {
+  statsd.timing(name, durationMs);
 };
 
 const trackApiMetrics = (req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
+
     const method = req.method;
-    const route = req.baseUrl + (req.route?.path || '');
-    sendCustomMetric(`API.${method}.${route}.CallCount`, 1);
-    sendCustomMetric(`API.${method}.${route}.Duration`, duration, 'Milliseconds');
+
+    
+    let fullPath = (req.baseUrl + (req.route?.path || '')).replace(/\/+/g, '/');
+
+    fullPath = fullPath.replace(/\/$/, '') || '/';
+
+    fullPath = fullPath.replace(/\d+/g, ':id');
+
+    sendCustomMetric(`API.${method}.${fullPath}.CallCount`);
+    sendTimingMetric(`API.${method}.${fullPath}.Duration`, duration);
   });
   next();
 };
 
+
 const trackDbMetric = (operation, table, startTime) => {
   const duration = Date.now() - startTime;
-  sendCustomMetric(`Database.${operation}.${table}.Duration`, duration, 'Milliseconds');
+  sendTimingMetric(`DB.${operation}.${table}.Duration`, duration);
 };
 
 const trackS3Metric = (operation, startTime) => {
   const duration = Date.now() - startTime;
-  sendCustomMetric(`S3.${operation}.Duration`, duration, 'Milliseconds');
+  sendTimingMetric(`S3.${operation}.Duration`, duration);
 };
 
 module.exports = { sendCustomMetric, trackApiMetrics, trackDbMetric, trackS3Metric };
