@@ -1,7 +1,7 @@
 const express = require('express');
 const { uploadFile, getFiles, getFileById, deleteFile } = require('../controllers/fileController');
 const logger = require('../config/logger'); // Ensure you have this set up for winston
-const statsd = require('../config/metrics'); // Ensure you have this set up for hot-shots
+const { sendCustomMetric } = require('../config/metrics'); // Updated to use CloudWatch metrics
 
 const router = express.Router();
 
@@ -9,9 +9,9 @@ router.use((req, res, next) => {
     const start = Date.now(); // Start time for measuring request duration
     res.on('finish', () => {
         const duration = Date.now() - start;
-        statsd.timing(`routes.${req.route.path}`, duration);
+        sendCustomMetric(`routes.${req.route.path}.Duration`, duration, 'Milliseconds');
         logger.info(`Request processed: ${req.method} ${req.route.path} - ${res.statusCode} [${duration}ms]`);
-        statsd.increment(`routes.${req.method}.${req.route.path}.calls`);
+        sendCustomMetric(`routes.${req.method}.${req.route.path}.Calls`, 1);
     });
     if (req.method === 'HEAD') {
         return res.status(405).json({ error: "Method Not Allowed", message: "HEAD requests are not supported on this endpoint." });
