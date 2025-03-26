@@ -19,19 +19,29 @@ if (!isTestEnv && !BUCKET_NAME) {
 }
 
 // Multer-S3 storage configuration
-const upload = multer({
-    storage: multerS3({
-        s3: s3,
-        bucket: BUCKET_NAME,
-        metadata: (req, file, cb) => {
-            cb(null, { fieldName: file.fieldname });
-        },
-        key: (req, file, cb) => {
-            const fileKey = `uploads/${uuidv4()}-${file.originalname}`;
-            cb(null, fileKey);
-        }
-    })
-}).single('file');
+const upload = isTestEnv
+    ? (req, res, next) => {
+        req.file = {
+            originalname: "dummy.txt",
+            location: "s3://dummy-bucket/dummy.txt",
+            mimetype: "text/plain",
+            size: 1024
+        };
+        next();
+    }
+    : multer({
+        storage: multerS3({
+            s3: s3,
+            bucket: BUCKET_NAME,
+            metadata: (req, file, cb) => {
+                cb(null, { fieldName: file.fieldname });
+            },
+            key: (req, file, cb) => {
+                const fileKey = `uploads/${uuidv4()}-${file.originalname}`;
+                cb(null, fileKey);
+            }
+        })
+    }).single('file');
 
 // POST /v1/file - Upload a file
 exports.uploadFile = async (req, res) => {
