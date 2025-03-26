@@ -9,7 +9,7 @@ if (!fs.existsSync('logs')) {
 
 // Optional: Dynamic log group/stream naming
 const logGroupName = `NodeApp-${process.env.NODE_ENV || 'dev'}`;
-const logStreamName = `stream-${new Date().toISOString().split('T')[0]}`;
+const logStreamName = `Webapp-${new Date().toISOString().split('T')[0]}`;
 
 const cloudWatchConfig = {
   logGroupName,
