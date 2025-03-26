@@ -4,21 +4,16 @@ const multerS3 = require('multer-s3');
 const { v4: uuidv4 } = require('uuid');
 const File = require('../models/File.js');
 const logger = require('../config/logger');
-const { sendCustomMetric } = require('../config/metrics');
+const { sendCustomMetric, trackDbMetric, trackS3Metric } = require('../config/metrics');
 
-// Initialize S3 client for AWS SDK v3
-const s3 = new S3Client({
-    region: process.env.AWS_REGION || "us-east-1"
-});
+const s3 = new S3Client({ region: process.env.AWS_REGION || "us-east-1" });
 const isTestEnv = process.env.NODE_ENV === 'test';
-
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 if (!isTestEnv && !BUCKET_NAME) {
     throw new Error("S3_BUCKET_NAME environment variable is missing.");
 }
 
-// Multer-S3 storage configuration
 const upload = isTestEnv
     ? (req, res, next) => {
         req.file = {
@@ -33,128 +28,120 @@ const upload = isTestEnv
         storage: multerS3({
             s3: s3,
             bucket: BUCKET_NAME,
-            metadata: (req, file, cb) => {
-                cb(null, { fieldName: file.fieldname });
-            },
-            key: (req, file, cb) => {
-                const fileKey = `uploads/${uuidv4()}-${file.originalname}`;
-                cb(null, fileKey);
-            }
+            metadata: (req, file, cb) => cb(null, { fieldName: file.fieldname }),
+            key: (req, file, cb) => cb(null, `uploads/${uuidv4()}-${file.originalname}`)
         })
     }).single('file');
 
-// POST /v1/file - Upload a file
+// POST /v1/file
 exports.uploadFile = async (req, res) => {
     const startTime = new Date();
     upload(req, res, async (err) => {
         if (err) {
             logger.error("File upload error", { error: err });
-            sendCustomMetric('FileUploadFail', 1);
+            sendCustomMetric('S3.Upload.Fail', 1);
             return res.status(500).json({ error: "File upload failed", details: err.message });
         }
 
         if (!req.file) {
             logger.error("No file uploaded");
-            sendCustomMetric('FileUploadNoFile', 1);
+            sendCustomMetric('S3.Upload.NoFile', 1);
             return res.status(400).json({ error: "No file uploaded" });
         }
 
         try {
+            const dbStart = Date.now();
             const newFile = await File.create({
                 fileName: req.file.originalname,
                 s3Path: req.file.location,
                 fileType: req.file.mimetype,
                 fileSize: req.file.size
             });
+            trackDbMetric('INSERT', 'files', dbStart);
 
-            const duration = new Date() - startTime;
-            sendCustomMetric('FileUploadDuration', duration, 'Milliseconds');
-            sendCustomMetric('FileUploadCount', 1);
+            trackS3Metric('Upload', startTime);
 
-            logger.info("File uploaded", { fileName: req.file.originalname, location: req.file.location });
+            logger.info("File uploaded", { fileName: req.file.originalname });
             res.status(201).json({
                 id: newFile.id,
                 fileName: newFile.fileName,
                 s3Path: newFile.s3Path
             });
         } catch (error) {
-            logger.error("Database error", { error: error.message });
-            sendCustomMetric('FileUploadDBError', 1);
+            logger.error("DB Error", { error: error.message });
+            sendCustomMetric('Database.INSERT.files.Fail', 1);
             res.status(500).json({ error: "Database error", details: error.message });
         }
     });
 };
 
-// GET /v1/file - List all files
+// GET /v1/file
 exports.getFiles = async (req, res) => {
-    const startTime = new Date();
+    const start = Date.now();
     try {
         const files = await File.findAll({ attributes: ['id', 'fileName', 's3Path', 'fileType', 'fileSize', 'createdAt'] });
-        const duration = new Date() - startTime;
-        sendCustomMetric('FileListDuration', duration, 'Milliseconds');
-        sendCustomMetric('FileListCount', 1);
+        trackDbMetric('SELECT', 'files', start);
 
         logger.info("Files retrieved", { count: files.length });
         res.status(200).json(files);
     } catch (error) {
-        logger.error("Database error", { error: error.message });
-        sendCustomMetric('FileListDBError', 1);
+        logger.error("DB Error", { error: error.message });
+        sendCustomMetric('Database.SELECT.files.Fail', 1);
         res.status(500).json({ error: "Database error", details: error.message });
     }
 };
 
-// GET /v1/file/{id} - Get file metadata
+// GET /v1/file/:id
 exports.getFileById = async (req, res) => {
-    const startTime = new Date();
+    const start = Date.now();
     try {
         const file = await File.findByPk(req.params.id);
-        const duration = new Date() - startTime;
+        trackDbMetric('SELECT', 'files', start);
+
         if (!file) {
-            logger.error("File not found", { fileId: req.params.id });
-            sendCustomMetric('FileGetNotFound', 1);
+            logger.warn("File not found", { fileId: req.params.id });
+            sendCustomMetric('File.Get.NotFound', 1);
             return res.status(404).json({ error: "File not found" });
         }
 
-        sendCustomMetric('FileGetDuration', duration, 'Milliseconds');
-        sendCustomMetric('FileGetCount', 1);
-        logger.info("File retrieved", { fileId: file.id });
+        logger.info("File fetched", { id: file.id });
         res.status(200).json(file);
     } catch (error) {
-        logger.error("Database error", { error: error.message });
-        sendCustomMetric('FileGetDBError', 1);
+        logger.error("DB Error", { error: error.message });
+        sendCustomMetric('Database.SELECT.files.Fail', 1);
         res.status(500).json({ error: "Database error", details: error.message });
     }
 };
 
-// DELETE /v1/file/{id} - Delete file
+// DELETE /v1/file/:id
 exports.deleteFile = async (req, res) => {
-    const startTime = new Date();
+    const start = Date.now();
     try {
         const file = await File.findByPk(req.params.id);
+        trackDbMetric('SELECT', 'files', start);
+
         if (!file) {
-            logger.error("File not found", { fileId: req.params.id });
-            sendCustomMetric('FileDeleteNotFound', 1);
+            logger.warn("File not found", { fileId: req.params.id });
+            sendCustomMetric('File.Delete.NotFound', 1);
             return res.status(404).json({ error: "File not found" });
         }
 
-        const deleteParams = {
+        const s3Start = Date.now();
+        await s3.send(new DeleteObjectCommand({
             Bucket: BUCKET_NAME,
             Key: file.s3Path.split('/').pop()
-        };
+        }));
+        trackS3Metric('Delete', s3Start);
 
-        const deleteStartTime = new Date();
-        await s3.send(new DeleteObjectCommand(deleteParams));
+        const deleteStart = Date.now();
         await file.destroy();
-        const deleteDuration = new Date() - deleteStartTime;
+        trackDbMetric('DELETE', 'files', deleteStart);
 
-        sendCustomMetric('FileDeleteDuration', deleteDuration, 'Milliseconds');
-        sendCustomMetric('FileDeleteCount', 1);
-
-        logger.info("File deleted", { fileId: file.id });
+        logger.info("File deleted", { id: file.id });
         res.status(200).json({ message: "File deleted successfully" });
     } catch (error) {
         logger.error("Error deleting file", { error: error.message });
-        sendCustomMetric('FileDeleteFail', 1);
+        sendCustomMetric('File.Delete.Fail', 1);
         res.status(500).json({ error: "Error deleting file", details: error.message });
     }
 };
