@@ -29,7 +29,10 @@ const upload = isTestEnv
             s3: s3,
             bucket: BUCKET_NAME,
             metadata: (req, file, cb) => cb(null, { fieldName: file.fieldname }),
-            key: (req, file, cb) => cb(null, `uploads/${uuidv4()}-${file.originalname}`)
+            key: (req, file, cb) => {
+                const key = `uploads/${uuidv4()}-${file.originalname}`;
+                cb(null, key);
+            }
         })
     }).single('file');
 
@@ -58,7 +61,6 @@ exports.uploadFile = async (req, res) => {
                 fileSize: req.file.size
             });
             trackDbMetric('INSERT', 'files', dbStart);
-
             trackS3Metric('Upload', startTime);
 
             logger.info("File uploaded", { fileName: req.file.originalname });
@@ -127,11 +129,16 @@ exports.deleteFile = async (req, res) => {
         }
 
         const s3Start = Date.now();
+
+        // Extract S3 key safely using URL
+        const url = new URL(file.s3Path);
+        const s3Key = url.pathname.replace(/^\/+/, ''); // Remove leading slash
+
         await s3.send(new DeleteObjectCommand({
             Bucket: BUCKET_NAME,
-            Key: file.s3Path.split('.amazonaws.com/')[1]   
+            Key: s3Key
         }));
-        
+
         trackS3Metric('Delete', s3Start);
 
         const deleteStart = Date.now();
