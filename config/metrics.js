@@ -25,29 +25,18 @@ const trackApiMetrics = (req, res, next) => {
     const duration = Date.now() - start;
     const method = req.method;
 
-    let fullPath;
+    // Use original URL to catch full path (including /v1 or /healthz)
+    let path = req.originalUrl.split('?')[0];
 
-    // Safe route extraction
-    if (req.route && req.baseUrl) {
-      fullPath = `${req.baseUrl}${req.route.path}`;
-    } else if (req.originalUrl) {
-      fullPath = req.originalUrl.split('?')[0];
-    } else {
-      fullPath = 'unknown';
-    }
+    // Normalize dynamic segments (like IDs)
+    path = path.replace(/\d+/g, 'id');
 
-    // Normalize path
-    fullPath = fullPath
-      .replace(/\/+/g, '/')
-      .replace(/\/$/, '') || '/';
-    fullPath = fullPath
-      .replace(/:\w+/g, 'id')
-      .replace(/\d+/g, 'id')
-      .replace(/[^a-zA-Z0-9/_\-\.]/g, '');
+    // Clean path
+    path = path.replace(/\/+$/, '') || '/';
+    path = path.replace(/[^a-zA-Z0-9/_\-\.]/g, '');
 
-    const metricBase = `API.${method}.${fullPath}`;
-    sendCustomMetric(`${metricBase}.CallCount`);
-    sendTimingMetric(`${metricBase}.Duration`, duration);
+    sendCustomMetric(`API.${method}.${path}.CallCount`);
+    sendTimingMetric(`API.${method}.${path}.Duration`, duration);
   });
 
   next();
