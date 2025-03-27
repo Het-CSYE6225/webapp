@@ -129,8 +129,9 @@ exports.deleteFile = async (req, res) => {
         const s3Start = Date.now();
         await s3.send(new DeleteObjectCommand({
             Bucket: BUCKET_NAME,
-            Key: file.s3Path.split('/').pop()
+            Key: file.s3Path.split('.amazonaws.com/')[1]   
         }));
+        
         trackS3Metric('Delete', s3Start);
 
         const deleteStart = Date.now();
