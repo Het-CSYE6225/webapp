@@ -25,18 +25,32 @@ const trackApiMetrics = (req, res, next) => {
     const duration = Date.now() - start;
     const method = req.method;
 
-    // Normalize full route
-    let fullPath = (req.baseUrl + (req.route?.path || '')).replace(/\/+/g, '/');
-    fullPath = fullPath.replace(/\/$/, '') || '/';        
-    fullPath = fullPath.replace(/:\w+/g, 'id');           
-    fullPath = fullPath.replace(/[^a-zA-Z0-9/_\-\.]/g, ''); 
+    let fullPath;
 
+    if (req.route && req.baseUrl) {
+      // This is a matched route (e.g., /v1/file/:id)
+      fullPath = `${req.baseUrl}${req.route.path}`;
+    } else {
+      // Unmatched or unsupported route (e.g., invalid PATCH/HEAD)
+      fullPath = req.originalUrl.split('?')[0];
+    }
+
+    // Normalize the path
+    fullPath = fullPath
+      .replace(/\/+/g, '/')           
+      .replace(/\/$/, '') || '/';     
+    fullPath = fullPath
+      .replace(/\d+/g, 'id')          
+      .replace(/[^a-zA-Z0-9/_\-\.]/g, ''); 
+
+    // Send metrics
     sendCustomMetric(`API.${method}.${fullPath}.CallCount`);
     sendTimingMetric(`API.${method}.${fullPath}.Duration`, duration);
   });
 
   next();
 };
+
 
 
 const trackDbMetric = (operation, table, startTime) => {
