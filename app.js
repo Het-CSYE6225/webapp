@@ -10,10 +10,13 @@ const port = process.env.PORT || 8080;
 
 app.disable('x-powered-by');
 app.use(express.json());
-app.use(trackApiMetrics); 
 
+// Routes (before metrics)
 app.use('/v1', fileRoutes);
 app.use('/', healthCheckRoutes);
+
+// Track API metrics *after* route resolution
+app.use(trackApiMetrics);
 
 // JSON error handler
 app.use((err, req, res, next) => {
@@ -23,6 +26,7 @@ app.use((err, req, res, next) => {
   next();
 });
 
+// GET request body/query checks
 app.use((req, res, next) => {
   if (req.method === 'GET' && Object.keys(req.body).length > 0) {
     return res.status(400).send('GET requests should not have a body.');
