@@ -29,7 +29,7 @@ const upload = isTestEnv
             s3: s3,
             bucket: BUCKET_NAME,
             metadata: (req, file, cb) => cb(null, { fieldName: file.fieldname }),
-            key: (req, file, cb) => cb(null, uploads/$`{uuidv4()}-${file.originalname}`)
+            key: (req, file, cb) => cb(null, `uploads/${uuidv4()}-${file.originalname}`)
         })
     }).single('file');
 
@@ -53,7 +53,7 @@ exports.uploadFile = async (req, res) => {
             const dbStart = Date.now();
             const newFile = await File.create({
                 fileName: req.file.originalname,
-                s3Path: req.file.location,
+                s3Path: req.file.key,
                 fileType: req.file.mimetype,
                 fileSize: req.file.size
             });
@@ -129,7 +129,7 @@ exports.deleteFile = async (req, res) => {
         const s3Start = Date.now();
         await s3.send(new DeleteObjectCommand({
             Bucket: BUCKET_NAME,
-            Key: file.s3Path.split('.amazonaws.com/')[1]   
+            Key: file.s3Path, 
         }));
         
         trackS3Metric('Delete', s3Start);
