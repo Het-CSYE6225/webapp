@@ -9,22 +9,22 @@ const statsd = new StatsD({
   }
 });
 
-// Generate hourly time suffix like "_2025032715"
+// Dynamically generate suffix based on current UTC hour
 const getTimeSuffix = () => {
   const now = new Date();
   return '_' + now.toISOString().slice(0, 13).replace(/[-T:]/g, '');
 };
 
 const sendCustomMetric = (name, value = 1) => {
-  statsd.increment(name, value); // Stable name
-  statsd.increment(name + getTimeSuffix(), value); // Timestamped
-  console.log(`[Metrics] Count -> ${name} + ${name + getTimeSuffix()}`);
+  const metricName = name + getTimeSuffix();
+  statsd.increment(metricName, value);
+  console.log(`[Metrics] Count -> ${metricName}`);
 };
 
 const sendTimingMetric = (name, durationMs) => {
-  statsd.timing(name, durationMs); // Stable name
-  statsd.timing(name + getTimeSuffix(), durationMs); // Timestamped
-  console.log(`[Metrics] Timing -> ${name}: ${durationMs}ms`);
+  const metricName = name + getTimeSuffix();
+  statsd.timing(metricName, durationMs);
+  console.log(`[Metrics] Timing -> ${metricName}: ${durationMs}ms`);
 };
 
 const trackApiMetrics = (req, res, next) => {
@@ -33,15 +33,14 @@ const trackApiMetrics = (req, res, next) => {
   res.on('finish', () => {
     const duration = Date.now() - start;
     const method = req.method;
-    let path = req.originalUrl.split('?')[0];
 
+    let path = req.originalUrl.split('?')[0];
     path = path.replace(/\d+/g, 'id');
     path = path.replace(/\/+$/, '') || '/';
     path = path.replace(/[^a-zA-Z0-9/_\-\.]/g, '');
 
-    const baseMetric = `API.${method}.${path}`;
-    sendCustomMetric(`${baseMetric}.CallCount`);
-    sendTimingMetric(`${baseMetric}.Duration`, duration);
+    sendCustomMetric(`API.${method}.${path}.CallCount`);
+    sendTimingMetric(`API.${method}.${path}.Duration`, duration);
   });
 
   next();
