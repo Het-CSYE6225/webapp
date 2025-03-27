@@ -11,7 +11,7 @@ const port = process.env.PORT || 8080;
 app.disable('x-powered-by');
 app.use(express.json());
 
-// ✅ Validation Middleware BEFORE routes
+// Validation Middleware BEFORE routes
 app.use((req, res, next) => {
   if (req.method === 'GET' && Object.keys(req.body).length > 0) {
     return res.status(400).send('GET requests should not have a body.');
@@ -22,14 +22,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Metrics Middleware BEFORE routes (so we capture all traffic)
+// Metrics Middleware BEFORE routes (so we capture all traffic)
 app.use(trackApiMetrics);
 
-// ✅ Routes
+// Routes
 app.use('/v1', fileRoutes);
 app.use('/', healthCheckRoutes);
 
-// ✅ JSON error handler AFTER routes
+// JSON error handler AFTER routes
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).send('Invalid JSON payload.');
@@ -37,7 +37,7 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// ✅ DB & Server Boot
+// DB & Server Boot
 connectWithDatabaseCreation().then(() => {
   sequelize.sync({ alter: true }).then(() => {
     console.log("Database & tables are ready!");
