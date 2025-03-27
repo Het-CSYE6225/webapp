@@ -9,12 +9,22 @@ const statsd = new StatsD({
   }
 });
 
+// Dynamically generate suffix based on current UTC hour
+const getTimeSuffix = () => {
+  const now = new Date();
+  return '_' + now.toISOString().slice(0, 13).replace(/[-T:]/g, '');
+};
+
 const sendCustomMetric = (name, value = 1) => {
-  statsd.increment(name, value);
+  const metricName = name + getTimeSuffix();
+  statsd.increment(metricName, value);
+  console.log(`[Metrics] Count -> ${metricName}`);
 };
 
 const sendTimingMetric = (name, durationMs) => {
-  statsd.timing(name, durationMs);
+  const metricName = name + getTimeSuffix();
+  statsd.timing(metricName, durationMs);
+  console.log(`[Metrics] Timing -> ${metricName}: ${durationMs}ms`);
 };
 
 const trackApiMetrics = (req, res, next) => {
@@ -25,27 +35,16 @@ const trackApiMetrics = (req, res, next) => {
     const method = req.method;
 
     let path = req.originalUrl.split('?')[0];
-
-    // Normalize the path
     path = path.replace(/\d+/g, 'id');
     path = path.replace(/\/+$/, '') || '/';
     path = path.replace(/[^a-zA-Z0-9/_\-\.]/g, '');
 
-
-    const now = new Date();
-    const timeSuffix = now.toISOString().slice(0, 13).replace(/[-T:]/g, ''); // YYYYMMDDHH
-    const suffix = `_${timeSuffix}`; // "_2025032715"
-
-    const callCountMetric = `API.${method}.${path}.CallCount${suffix}`;
-    const durationMetric = `API.${method}.${path}.Duration${suffix}`;
-
-    sendCustomMetric(callCountMetric);
-    sendTimingMetric(durationMetric, duration);
+    sendCustomMetric(`API.${method}.${path}.CallCount`);
+    sendTimingMetric(`API.${method}.${path}.Duration`, duration);
   });
 
   next();
 };
-
 
 const trackDbMetric = (operation, table, startTime) => {
   const duration = Date.now() - startTime;
@@ -57,4 +56,10 @@ const trackS3Metric = (operation, startTime) => {
   sendTimingMetric(`S3.${operation}.Duration`, duration);
 };
 
-module.exports = { sendCustomMetric, trackApiMetrics, trackDbMetric, trackS3Metric };
+module.exports = {
+  sendCustomMetric,
+  sendTimingMetric,
+  trackApiMetrics,
+  trackDbMetric,
+  trackS3Metric
+};
