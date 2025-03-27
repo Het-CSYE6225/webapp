@@ -24,18 +24,28 @@ const trackApiMetrics = (req, res, next) => {
     const duration = Date.now() - start;
     const method = req.method;
 
-    // Correct path resolution
-    let path = (req.baseUrl + req.path).replace(/\/+/g, '/');
+    let path = req.originalUrl.split('?')[0];
+
+    // Normalize the path
     path = path.replace(/\d+/g, 'id');
     path = path.replace(/\/+$/, '') || '/';
     path = path.replace(/[^a-zA-Z0-9/_\-\.]/g, '');
 
-    sendCustomMetric(`API.${method}.${path}.CallCount`);
-    sendTimingMetric(`API.${method}.${path}.Duration`, duration);
+
+    const now = new Date();
+    const timeSuffix = now.toISOString().slice(0, 13).replace(/[-T:]/g, ''); // YYYYMMDDHH
+    const suffix = `_${timeSuffix}`; // "_2025032715"
+
+    const callCountMetric = `API.${method}.${path}.CallCount${suffix}`;
+    const durationMetric = `API.${method}.${path}.Duration${suffix}`;
+
+    sendCustomMetric(callCountMetric);
+    sendTimingMetric(durationMetric, duration);
   });
 
   next();
 };
+
 
 const trackDbMetric = (operation, table, startTime) => {
   const duration = Date.now() - startTime;
