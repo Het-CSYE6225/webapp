@@ -1,4 +1,3 @@
-// /config/metrics.js
 const StatsD = require('hot-shots');
 
 const statsd = new StatsD({
@@ -25,13 +24,9 @@ const trackApiMetrics = (req, res, next) => {
     const duration = Date.now() - start;
     const method = req.method;
 
-    // Use original URL to catch full path (including /v1 or /healthz)
-    let path = req.originalUrl.split('?')[0];
-
-    // Normalize dynamic segments (like IDs)
+    // Correct path resolution
+    let path = (req.baseUrl + req.path).replace(/\/+/g, '/');
     path = path.replace(/\d+/g, 'id');
-
-    // Clean path
     path = path.replace(/\/+$/, '') || '/';
     path = path.replace(/[^a-zA-Z0-9/_\-\.]/g, '');
 
@@ -41,9 +36,6 @@ const trackApiMetrics = (req, res, next) => {
 
   next();
 };
-
-
-
 
 const trackDbMetric = (operation, table, startTime) => {
   const duration = Date.now() - startTime;
