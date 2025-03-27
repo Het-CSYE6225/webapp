@@ -29,7 +29,7 @@ const upload = isTestEnv
             s3: s3,
             bucket: BUCKET_NAME,
             metadata: (req, file, cb) => cb(null, { fieldName: file.fieldname }),
-            key: (req, file, cb) => cb(null, `uploads/${uuidv4()}-${file.originalname}`)
+            key: (req, file, cb) => cb(null, uploads/$`{uuidv4()}-${file.originalname}`)
         })
     }).single('file');
 
