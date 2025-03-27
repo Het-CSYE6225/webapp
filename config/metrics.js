@@ -27,29 +27,32 @@ const trackApiMetrics = (req, res, next) => {
 
     let fullPath;
 
+    // Safe route extraction
     if (req.route && req.baseUrl) {
-      // This is a matched route (e.g., /v1/file/:id)
       fullPath = `${req.baseUrl}${req.route.path}`;
-    } else {
-      // Unmatched or unsupported route (e.g., invalid PATCH/HEAD)
+    } else if (req.originalUrl) {
       fullPath = req.originalUrl.split('?')[0];
+    } else {
+      fullPath = 'unknown';
     }
 
-    // Normalize the path
+    // Normalize path
     fullPath = fullPath
-      .replace(/\/+/g, '/')           
-      .replace(/\/$/, '') || '/';     
+      .replace(/\/+/g, '/')
+      .replace(/\/$/, '') || '/';
     fullPath = fullPath
-      .replace(/\d+/g, 'id')          
-      .replace(/[^a-zA-Z0-9/_\-\.]/g, ''); 
+      .replace(/:\w+/g, 'id')
+      .replace(/\d+/g, 'id')
+      .replace(/[^a-zA-Z0-9/_\-\.]/g, '');
 
-    // Send metrics
-    sendCustomMetric(`API.${method}.${fullPath}.CallCount`);
-    sendTimingMetric(`API.${method}.${fullPath}.Duration`, duration);
+    const metricBase = `API.${method}.${fullPath}`;
+    sendCustomMetric(`${metricBase}.CallCount`);
+    sendTimingMetric(`${metricBase}.Duration`, duration);
   });
 
   next();
 };
+
 
 
 

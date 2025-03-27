@@ -35,6 +35,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/v1', fileRoutes);
+app.use(trackApiMetrics);
 connectWithDatabaseCreation().then(() => {
     app.use('/', healthCheckRoutes);
     sequelize.sync({ alter: true })
