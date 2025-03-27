@@ -9,24 +9,24 @@ const statsd = new StatsD({
   }
 });
 
-// Reusable suffix based on current hour (e.g., _2025032715)
-const now = new Date();
-const timeSuffix = now.toISOString().slice(0, 13).replace(/[-T:]/g, '');
-const suffix = `_${timeSuffix}`;
+// Dynamically generate suffix based on current UTC hour
+const getTimeSuffix = () => {
+  const now = new Date();
+  return '_' + now.toISOString().slice(0, 13).replace(/[-T:]/g, '');
+};
 
-// Sends a basic counter metric
 const sendCustomMetric = (name, value = 1) => {
-  statsd.increment(name, value);
-  console.log(`[Metrics] Count -> ${name}`);
+  const metricName = name + getTimeSuffix();
+  statsd.increment(metricName, value);
+  console.log(`[Metrics] Count -> ${metricName}`);
 };
 
-// Sends a timing metric (duration in ms)
 const sendTimingMetric = (name, durationMs) => {
-  statsd.timing(name, durationMs);
-  console.log(`[Metrics] Timing -> ${name}: ${durationMs}ms`);
+  const metricName = name + getTimeSuffix();
+  statsd.timing(metricName, durationMs);
+  console.log(`[Metrics] Timing -> ${metricName}: ${durationMs}ms`);
 };
 
-// Express middleware for tracking API metrics
 const trackApiMetrics = (req, res, next) => {
   const start = Date.now();
 
@@ -39,28 +39,21 @@ const trackApiMetrics = (req, res, next) => {
     path = path.replace(/\/+$/, '') || '/';
     path = path.replace(/[^a-zA-Z0-9/_\-\.]/g, '');
 
-    const callCountMetric = `API.${method}.${path}.CallCount${suffix}`;
-    const durationMetric = `API.${method}.${path}.Duration${suffix}`;
-
-    sendCustomMetric(callCountMetric);
-    sendTimingMetric(durationMetric, duration);
+    sendCustomMetric(`API.${method}.${path}.CallCount`);
+    sendTimingMetric(`API.${method}.${path}.Duration`, duration);
   });
 
   next();
 };
 
-// DB operation timing metric with timestamped metric name
 const trackDbMetric = (operation, table, startTime) => {
   const duration = Date.now() - startTime;
-  const metricName = `DB.${operation}.${table}.Duration${suffix}`;
-  sendTimingMetric(metricName, duration);
+  sendTimingMetric(`DB.${operation}.${table}.Duration`, duration);
 };
 
-// S3 operation timing metric with timestamped metric name
 const trackS3Metric = (operation, startTime) => {
   const duration = Date.now() - startTime;
-  const metricName = `S3.${operation}.Duration${suffix}`;
-  sendTimingMetric(metricName, duration);
+  sendTimingMetric(`S3.${operation}.Duration`, duration);
 };
 
 module.exports = {
