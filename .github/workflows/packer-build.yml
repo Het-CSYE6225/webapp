@@ -115,7 +115,7 @@ jobs:
         run: |
           set -e
 
-          echo "🔍 Fetching latest AMI ID..."
+          echo "Fetching latest AMI ID..."
           AMI_ID=$(aws ec2 describe-images --owners self \
             --filters "Name=name,Values=custom-node-postgres-app-*" \
             --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
@@ -131,7 +131,7 @@ jobs:
           echo "Waiting for AMI to become available..."
           aws ec2 wait image-available --image-id "$AMI_ID"
 
-          echo "🚀 Sharing AMI with Dev and Demo accounts..."
+          echo "Sharing AMI with Dev and Demo accounts..."
           aws ec2 modify-image-attribute --image-id "$AMI_ID" \
             --launch-permission "{\"Add\":[{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEV }}\"},{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEMO }}\"}]}"
 
