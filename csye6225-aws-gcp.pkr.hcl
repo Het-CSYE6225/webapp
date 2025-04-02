@@ -70,9 +70,6 @@ source "amazon-ebs" "aws_image" {
   tags = {
     Name = "custom-node-postgres-app-${timestamp()}"
   }
-  ami_tags = {
-    Name = "custom-node-postgres-app-${timestamp()}"
-  }
 }
 
 source "googlecompute" "gcp_image" {
