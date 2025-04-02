@@ -68,7 +68,7 @@ source "amazon-ebs" "aws_image" {
     delete_on_termination = true
   }
   tags = {
-    Name = "CustomNodeAppImage"
+    Name = "custom-node-postgres-app-${timestamp()}"
   }
 }
 
