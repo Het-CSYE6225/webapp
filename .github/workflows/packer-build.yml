@@ -112,15 +112,15 @@ jobs:
             csye6225-aws-gcp.pkr.hcl
 
       - name: Share AMI with Dev and Demo accounts
+        id: share-ami
         run: |
           set -e
-
           echo "Fetching latest AMI ID..."
           AMI_ID=$(aws ec2 describe-images --owners self \
             --filters "Name=name,Values=custom-node-postgres-app-*" \
             --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
             --output text)
-
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
           echo "AMI_ID: $AMI_ID"
 
           if [ -z "$AMI_ID" ]; then
@@ -134,7 +134,6 @@ jobs:
           echo "Sharing AMI with Dev and Demo accounts..."
           aws ec2 modify-image-attribute --image-id "$AMI_ID" \
             --launch-permission "{\"Add\":[{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEV }}\"},{\"UserId\":\"${{ secrets.AWS_ACCOUNT_ID_DEMO }}\"}]}"
-
           echo "AMI shared successfully!"
 
       - name: Share GCP Image with Demo Project
@@ -149,3 +148,58 @@ jobs:
             --project="${{ secrets.GCP_PROJECT_ID }}" \
             --member="serviceAccount:${{ secrets.GCP_DEMO_SERVICE_ACCOUNT }}" \
             --role="roles/compute.imageUser"
+
+      - name: Switch to DEMO AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create new Launch Template version with latest AMI
+        id: launch-template
+        run: |
+          echo "Creating new launch template version..."
+          VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+            --source-version 1 \
+            --launch-template-data "{\"ImageId\":\"$AMI_ID\"}" \
+            --query 'LaunchTemplateVersion.VersionNumber' \
+            --output text)
+          echo "LT_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Created LT version: $VERSION"
+
+      - name: Update Auto Scaling Group to use new version
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+            --launch-template "LaunchTemplateId=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=$LT_VERSION"
+
+      - name: Start Instance Refresh
+        id: refresh
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+            --strategy Rolling \
+            --query 'InstanceRefreshId' --output text)
+          echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_ENV
+          echo "Started instance refresh: $REFRESH_ID"
+
+      - name: Wait for Instance Refresh to Complete
+        run: |
+          while true; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+              --instance-refresh-ids $REFRESH_ID \
+              --query 'InstanceRefreshes[0].Status' \
+              --output text)
+            echo "Refresh status: $STATUS"
+            if [[ "$STATUS" == "Successful" ]]; then
+              echo "Instance refresh completed successfully."
+              exit 0
+            elif [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" ]]; then
+              echo "Instance refresh failed or cancelled."
+              exit 1
+            fi
+            sleep 30
+          done
