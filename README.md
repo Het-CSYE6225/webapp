@@ -79,3 +79,16 @@ To contribute to this project:
 
 
 
+```bash
+
+## Command to import certificate
+
+aws acm import-certificate \
+  --certificate fileb://C:/Masters/SEM-2/Cloud/demo_hetparikh_me/demo_hetparikh_me.crt \
+  --private-key fileb://C:/Masters/SEM-2/Cloud/demo_hetparikh_me/demo.key \
+  --certificate-chain fileb://C:/Masters/SEM-2/Cloud/demo_hetparikh_me/demo_hetparikh_me.ca-bundle \
+  --region us-east-1 \
+  --profile demo
+
+
+```
